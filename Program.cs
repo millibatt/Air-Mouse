@@ -8,7 +8,7 @@ using System.IO.Ports;
 using System.Collections;
 
 
-namespace motion_stone_air
+namespace motion_stone_mouse
 {
     class Program
     {
@@ -21,26 +21,26 @@ namespace motion_stone_air
         public static double xangle = 0;
         public static double yangle = 0;
         public static double zangle = 0;
-        public static double xAngle(float []q)
+        public static double xAngle(float[] q)
         {
-            double sincos = 2*(q[1]*q[0] + q[2]*q[3]);
-            double coscos = 1 - 2*(q[1]*q[1] + q[3]*q[3]);
+            double sincos = 2 * (q[1] * q[0] + q[2] * q[3]);
+            double coscos = 1 - 2 * (q[1] * q[1] + q[3] * q[3]);
             return Math.Atan2(sincos, coscos);
         }
 
         public static double zAngle(float[] q)
         {
-            float sinp = 2*(q[1]*q[2] + q[3]*q[0]);
+            float sinp = 2 * (q[1] * q[2] + q[3] * q[0]);
             if (Math.Abs(sinp) >= 1)
-                return Math.PI/2 * Math.Sign(sinp); // use 90 degrees if out of range
+                return Math.PI / 2 * Math.Sign(sinp); // use 90 degrees if out of range
             else
                 return Math.Asin(sinp);
         }
 
         public static double yAngle(float[] q)
         {
-            float sincos = 2*(q[2] *q[0] - q[1]*q[3]);
-            float coscos = 1 - 2*(q[2]*q[2] + q[3]*q[3]);
+            float sincos = 2 * (q[2] * q[0] - q[1] * q[3]);
+            float coscos = 1 - 2 * (q[2] * q[2] + q[3] * q[3]);
             return Math.Atan2(sincos, coscos);
         }
 
@@ -93,7 +93,7 @@ namespace motion_stone_air
                                 buf = (char)serialPort.ReadChar(); //'enter'
                         }
                     }
-                   
+
                     Voltage = q[4];
                     xangle = xAngle(q);
                     yangle = -yAngle(q);
@@ -104,10 +104,10 @@ namespace motion_stone_air
                     Console.WriteLine(sy);
                     var sz = string.Format("{0:0.00}", zangle);
                     Console.WriteLine(sz);
-                    SendInputClass.MouseEvent((int)(SendInputClass.MOUSEEVENTF.ABSOLUTE | SendInputClass.MOUSEEVENTF.MOVE),
+                    Input.MouseEvent((int)(Input.MOUSEEVENTF.ABSOLUTE | Input.MOUSEEVENTF.MOVE),
                                               (int)(32768.5f + ((-zangle * 5 / 3.1415) * 32768.5f)),
                                               (int)(32768.5f + ((-yangle * 5 / 3.1415) * 32768.5f)),
-                                              0);     
+                                              0);
                 }
                 catch (TimeoutException)
                 {
@@ -152,9 +152,9 @@ namespace motion_stone_air
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Fun starts!");           
+            Console.WriteLine("Fun starts!");
             // Connect to moition stone
-            OpenConnection();   
+            OpenConnection();
             UARTStreamer();
         }
     }
