@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +8,7 @@ using System.IO.Ports;
 using System.Collections;
 
 
-namespace x_IMU_Mouse
+namespace motion_stone_air
 {
     class Program
     {
@@ -21,32 +21,31 @@ namespace x_IMU_Mouse
         public static double xangle = 0;
         public static double yangle = 0;
         public static double zangle = 0;
-        public static double ComputeXAngle(float []q)
+        public static double xAngle(float []q)
         {
-            double sinr_cosp = 2 * (q[1] * q[0] + q[2] * q[3]);
-            double cosr_cosp = 1 - 2 * (q[1] * q[1] + q[3] * q[3]);
-            return Math.Atan2(sinr_cosp, cosr_cosp);
+            double sincos = 2*(q[1]*q[0] + q[2]*q[3]);
+            double coscos = 1 - 2*(q[1]*q[1] + q[3]*q[3]);
+            return Math.Atan2(sincos, coscos);
         }
 
-        public static double ComputeZAngle(float[] q)
+        public static double zAngle(float[] q)
         {
-            float sinp = 2 * (q[1] *q[2]  + q[3] * q[0]);
+            float sinp = 2*(q[1]*q[2] + q[3]*q[0]);
             if (Math.Abs(sinp) >= 1)
-                return Math.PI / 2 * Math.Sign(sinp); // use 90 degrees if out of range
+                return Math.PI/2 * Math.Sign(sinp); // use 90 degrees if out of range
             else
                 return Math.Asin(sinp);
         }
 
-        public static double ComputeYAngle(float[] q)
+        public static double yAngle(float[] q)
         {
-            float siny_cosp = 2 * (q[2] * q[0] - q[1] * q[3]);
-            float cosy_cosp = 1 - 2 * (q[2] * q[2] + q[3] * q[3]);
-            return Math.Atan2(siny_cosp, cosy_cosp);
+            float sincos = 2*(q[2] *q[0] - q[1]*q[3]);
+            float coscos = 1 - 2*(q[2]*q[2] + q[3]*q[3]);
+            return Math.Atan2(sincos, coscos);
         }
 
         static void UARTStreamer()
         {
-            
             while (true)
             {
                 count_index++;
@@ -66,22 +65,18 @@ namespace x_IMU_Mouse
                             minus = false;
                             q[k] = 0;
                             buf = (char)serialPort.ReadChar();//read q0
-                           
                             if (buf == '-')//check if it is a negative number
                             {
                                 minus = true; //negative number begins with '-'
                                 buf = (char)serialPort.ReadChar();// read the char after '-'
-                               
                             }
                             int d = buf - '0';//convert char to int
                             q[k] += d; //d is the ones place number
                             buf = (char)serialPort.ReadChar();//'.' decimal point
-                           
                             for (int j = 1; j <= 3; j++) // three digits after the decimal point
                             {
                                 //read in 3 chars and covert the string to a float value
                                 buf = (char)serialPort.ReadChar();
-                               
                                 d = buf - '0';
                                 q[k] += (float)(d / (Math.Pow(10, j)));
                             }
@@ -92,34 +87,27 @@ namespace x_IMU_Mouse
                             {
                                 //',' is the dividen char between each data
                                 buf = (char)serialPort.ReadChar(); //','
-                               
                             }
                             else
                                 //this is the last char for line change
                                 buf = (char)serialPort.ReadChar(); //'enter'
-                           
                         }
                     }
-                    //IMU to Unity coordinate conversion
-              
+                   
                     Voltage = q[4];
-                 
-                        xangle = ComputeXAngle(q);
-                        yangle = -ComputeYAngle(q);
-                        zangle = ComputeZAngle(q);
-
-                        var sx = string.Format("{0:0.00}", xangle);
-                        Console.WriteLine(sx);
-                        var sy = string.Format("{0:0.00}", yangle);
-                        Console.WriteLine(sy);
-                        var sz = string.Format("{0:0.00}", zangle);
-                        Console.WriteLine(sz);
-
-                        SendInputClass.MouseEvent((int)(SendInputClass.MOUSEEVENTF.ABSOLUTE | SendInputClass.MOUSEEVENTF.MOVE),
+                    xangle = xAngle(q);
+                    yangle = -yAngle(q);
+                    zangle = zAngle(q);
+                    var sx = string.Format("{0:0.00}", xangle);
+                    Console.WriteLine(sx);
+                    var sy = string.Format("{0:0.00}", yangle);
+                    Console.WriteLine(sy);
+                    var sz = string.Format("{0:0.00}", zangle);
+                    Console.WriteLine(sz);
+                    SendInputClass.MouseEvent((int)(SendInputClass.MOUSEEVENTF.ABSOLUTE | SendInputClass.MOUSEEVENTF.MOVE),
                                               (int)(32768.5f + ((-zangle * 5 / 3.1415) * 32768.5f)),
                                               (int)(32768.5f + ((-yangle * 5 / 3.1415) * 32768.5f)),
-                                              0);
-                   
+                                              0);     
                 }
                 catch (TimeoutException)
                 {
@@ -155,21 +143,17 @@ namespace x_IMU_Mouse
             else
             {
                 if (serialPort.IsOpen)
-                {
                     Console.WriteLine("Port is already open!");
-                }
                 else
-                {
                     Console.WriteLine("Port is null!");
-                }
             }
         }
 
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");    
-            // Connect to x-IMU
+            Console.WriteLine("Fun starts!");           
+            // Connect to moition stone
             OpenConnection();   
             UARTStreamer();
         }
